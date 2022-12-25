@@ -1,4 +1,4 @@
-# scrypt-mcf - v0.9.4
+# scrypt-mcf - v1.0.0
 
 Scrypt using MCF for both browsers and Node.js
 
@@ -37,7 +37,7 @@ a MFC string with the format $scrypt$ln=<cost>,r=<blocksize>,p=<parallelism>$<sa
 
 #### Defined in
 
-[index.ts:28](https://github.com/juanelas/scrypt-mcf/blob/5e61fc9/src/ts/index.ts#L28)
+[index.ts:28](https://github.com/juanelas/scrypt-mcf/blob/241f401/src/ts/index.ts#L28)
 
 ___
 
@@ -60,4 +60,4 @@ Verify if provided password meets the stored hash (in MCF)
 
 #### Defined in
 
-[index.ts:53](https://github.com/juanelas/scrypt-mcf/blob/5e61fc9/src/ts/index.ts#L53)
+[index.ts:53](https://github.com/juanelas/scrypt-mcf/blob/241f401/src/ts/index.ts#L53)
