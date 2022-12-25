@@ -1,12 +1,16 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
+[![Node.js CI](https://github.com/juanelas/scrypt-mcf/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/juanelas/scrypt-mcf/actions/workflows/build-and-test.yml)
+[![Coverage Status](https://coveralls.io/repos/github/juanelas/scrypt-mcf/badge.svg?branch=main)](https://coveralls.io/github/juanelas/scrypt-mcf?branch=main)
 
 # scrypt-mcf
 
-Scrypt using MCF for both browsers and Node.js
+A scrypt implementation for both Browsers and Node.js using a MCF and/or PHC compliant format. scrypt-mcf generates scrypt "hashes" in the following format:
 
-More details about you package...
+```mcf
+$scrypt$ln=<cost>,r=<blocksize>,p=<parallelism>$<salt in base64 no padding>$<hash in base64 no padding>
+```
 
 ## Usage
 
@@ -35,7 +39,20 @@ You can also download the [IIFE bundle](https://raw.githubusercontent.com/juanel
 An example of usage could be:
 
 ```typescript
-YOUR TYPESCRIPT EXAMPLE CODE HERE
+import { hash, verify } from 'scrypt-mfc'
+
+async function main () {
+  const mcfString = await hash('MyPassword') // $scrypt$ln=17,r=8,p=1$bjDYMlHNovhjawrXbfrAdw$q7Z6sgaMJMMdSNECL+MGGWX+6Vm+q/o6ysACeY8eYNY
+  let passwordMatch = await verify('MyPassword', mcfString) // true
+  passwordMatch = await verify('OtherPassword', mcfString) // false
+
+  // You can also use non-default options
+  const mcfString2 = await hash('MyPassword', { derivedKeyLength: 64, scryptParams: { logN: 18, r: 8, p: 2 } }) // $scrypt$ln=18,r=8,p=2$9lRqxeVS/at1bktaJ5q64A$pFmlWRrddcMHScP1Yceyo6UKc8eKEJDv+/aWSRlArg3b4Hu+xEFE88P+0HHilbBViRAAhtNWETTosUtxEJl95g
+  passwordMatch = await verify('MyPassword', mcfString) // true
+  passwordMatch = await verify('OtherPassword', mcfString) // false
+}
+
+main()
 ```
 
 ## API reference documentation

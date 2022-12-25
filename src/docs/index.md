@@ -5,9 +5,11 @@
 
 # {{PKG_NAME}}
 
-{{PKG_DESCRIPTION}}
+A scrypt implementation for both Browsers and Node.js using a MCF and/or PHC compliant format. {{PKG_NAME}} generates scrypt "hashes" in the following format:
 
-More details about you package...
+```mcf
+$scrypt$ln=<cost>,r=<blocksize>,p=<parallelism>$<salt in base64 no padding>$<hash in base64 no padding>
+```
 
 ## Usage
 
@@ -36,7 +38,20 @@ You can also download the {{IIFE_BUNDLE}}, the {{ESM_BUNDLE}} or the {{UMD_BUNDL
 An example of usage could be:
 
 ```typescript
-YOUR TYPESCRIPT EXAMPLE CODE HERE
+import { hash, verify } from 'scrypt-mfc'
+
+async function main () {
+  const mcfString = await hash('MyPassword') // $scrypt$ln=17,r=8,p=1$bjDYMlHNovhjawrXbfrAdw$q7Z6sgaMJMMdSNECL+MGGWX+6Vm+q/o6ysACeY8eYNY
+  let passwordMatch = await verify('MyPassword', mcfString) // true
+  passwordMatch = await verify('OtherPassword', mcfString) // false
+
+  // You can also use non-default options
+  const mcfString2 = await hash('MyPassword', { derivedKeyLength: 64, scryptParams: { logN: 18, r: 8, p: 2 } }) // $scrypt$ln=18,r=8,p=2$9lRqxeVS/at1bktaJ5q64A$pFmlWRrddcMHScP1Yceyo6UKc8eKEJDv+/aWSRlArg3b4Hu+xEFE88P+0HHilbBViRAAhtNWETTosUtxEJl95g
+  passwordMatch = await verify('MyPassword', mcfString) // true
+  passwordMatch = await verify('OtherPassword', mcfString) // false
+}
+
+main()
 ```
 
 ## API reference documentation

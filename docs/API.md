@@ -6,29 +6,28 @@ Scrypt using MCF for both browsers and Node.js
 
 ### Interfaces
 
+- [ScryptMcfOptions](interfaces/ScryptMcfOptions.md)
 - [ScryptParams](interfaces/ScryptParams.md)
 
 ### Functions
 
-- [kdf](API.md#kdf)
+- [hash](API.md#hash)
 - [verify](API.md#verify)
 
 ## Functions
 
-### kdf
+### hash
 
-▸ **kdf**(`password`, `saltBase64?`, `params?`, `derivedKeyLength?`): `Promise`<`string`\>
+▸ **hash**(`password`, `options?`): `Promise`<`string`\>
 
 Computes a MFC string derived using scrypt on input password
 
 #### Parameters
 
-| Name | Type | Default value | Description |
-| :------ | :------ | :------ | :------ |
-| `password` | `string` | `undefined` | the password |
-| `saltBase64?` | `string` | `undefined` | a scrypt salt (16 bytes) in base64 with no padding (22 characters) |
-| `params?` | [`ScryptParams`](interfaces/ScryptParams.md) | `undefined` | scrypt params. If not provided, default values are assumed. { logN: 17, r: 8, p: 1 } |
-| `derivedKeyLength` | `number` | `32` | the expected length of the output key. |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `password` | `string` | the password |
+| `options?` | [`ScryptMcfOptions`](interfaces/ScryptMcfOptions.md) | optional 16 bytes/22 characters salt in base64 with no padding (a fresh random one is created if not provided), derivedKeyLength (defaults to 32 bytes), and scrypt parameters (defaults to { logN: 17, r: 8, p: 1 }) |
 
 #### Returns
 
@@ -38,7 +37,7 @@ a MFC string with the format $scrypt$ln=<cost>,r=<blocksize>,p=<parallelism>$<sa
 
 #### Defined in
 
-index.ts:24
+[index.ts:28](https://github.com/juanelas/scrypt-mcf/blob/bb62661/src/ts/index.ts#L28)
 
 ___
 
@@ -61,4 +60,4 @@ Verify if provided password meets the stored hash (in MCF)
 
 #### Defined in
 
-index.ts:48
+[index.ts:53](https://github.com/juanelas/scrypt-mcf/blob/bb62661/src/ts/index.ts#L53)

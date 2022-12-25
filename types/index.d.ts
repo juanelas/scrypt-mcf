@@ -3,6 +3,11 @@ export interface ScryptParams {
     r?: number;
     p?: number;
 }
-export declare function kdf(password: string, saltBase64?: string, params?: ScryptParams, derivedKeyLength?: number): Promise<string>;
+export interface ScryptMcfOptions {
+    saltBase64NoPadding?: string;
+    derivedKeyLength?: number;
+    scryptParams?: ScryptParams;
+}
+export declare function hash(password: string, options?: ScryptMcfOptions): Promise<string>;
 export declare function verify(password: string, mcf: string): Promise<boolean>;
 //# sourceMappingURL=index.d.ts.map

@@ -12,29 +12,34 @@ export interface ScryptParams {
   p?: number
 }
 
+export interface ScryptMcfOptions {
+  saltBase64NoPadding?: string // a scrypt salt (16 bytes) in base64 with no padding (22 characters)
+  derivedKeyLength?: number // the expected length of the output key
+  scryptParams?: ScryptParams // scrypt parameters
+}
+
 /**
  * Computes a MFC string derived using scrypt on input password
  *
  * @param password - the password
- * @param saltBase64 - a scrypt salt (16 bytes) in base64 with no padding (22 characters)
- * @param params - scrypt params. If not provided, default values are assumed. { logN: 17, r: 8, p: 1 }
- * @param derivedKeyLength - the expected length of the output key.
+ * @param options - optional 16 bytes/22 characters salt in base64 with no padding (a fresh random one is created if not provided), derivedKeyLength (defaults to 32 bytes), and scrypt parameters (defaults to { logN: 17, r: 8, p: 1 })
  * @returns a MFC string with the format $scrypt$ln=<cost>,r=<blocksize>,p=<parallelism>$<salt in base64 no padding>$<hash in base64 no padding>
  */
-export async function kdf (password: string, saltBase64?: string, params?: ScryptParams, derivedKeyLength = 32): Promise<string> {
+export async function hash (password: string, options?: ScryptMcfOptions): Promise<string> {
   const scryptParams: Required<ScryptParams> = {
     logN: 17,
     r: 8,
     p: 1,
-    ...params
+    ...options?.scryptParams
   }
   const scryptPbkdfParams: ScryptPbkdfParams = {
     N: 2 ** scryptParams.logN,
     r: scryptParams.r,
     p: scryptParams.p
   }
-  const S = (saltBase64 !== undefined) ? b64decode(saltBase64) : getRandomSalt()
+  const S = (options?.saltBase64NoPadding !== undefined) ? b64decode(options.saltBase64NoPadding) : getRandomSalt()
   const SBase64 = b64encode(S, false, false)
+  const derivedKeyLength = options?.derivedKeyLength ?? 32
   const hash = b64encode(await scrypt(password, S, derivedKeyLength, scryptPbkdfParams), false, false)
   return `$scrypt$ln=${scryptParams.logN},r=${scryptParams.r},p=${scryptParams.p}$${SBase64}$${hash}`
 }
@@ -60,7 +65,11 @@ export async function verify (password: string, mcf: string): Promise<boolean> {
   const S = matches[0][4]
   const derivedKeyLength = 2 ** (Math.floor(Math.log2(matches[0][5].length * 6)) - 3)
 
-  const passwordMfc = await kdf(password, S, { logN, r, p }, derivedKeyLength)
+  const passwordMfc = await hash(password, {
+    saltBase64NoPadding: S,
+    scryptParams: { logN, r, p },
+    derivedKeyLength
+  })
 
   return passwordMfc === mcf
 }
