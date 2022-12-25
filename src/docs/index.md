@@ -38,7 +38,7 @@ You can also download the {{IIFE_BUNDLE}}, the {{ESM_BUNDLE}} or the {{UMD_BUNDL
 An example of usage could be:
 
 ```typescript
-import { hash, verify } from 'scrypt-mfc'
+import { hash, verify } from '{{PKG_NAME}}'
 
 async function main () {
   const mcfString = await hash('MyPassword') // $scrypt$ln=17,r=8,p=1$bjDYMlHNovhjawrXbfrAdw$q7Z6sgaMJMMdSNECL+MGGWX+6Vm+q/o6ysACeY8eYNY
