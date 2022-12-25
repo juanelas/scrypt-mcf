@@ -6,7 +6,7 @@
 
 # scrypt-mcf
 
-A scrypt implementation for both Browsers and Node.js using a MCF and/or PHC compliant format. scrypt-mcf generates scrypt "hashes" in the following format:
+A scrypt implementation for both Browsers and Node.js using Modular Crypt Format (MCF) and/or [PHC String Format](https://github.com/P-H-C/phc-string-format/blob/master/phc-sf-spec.md). Same as in [`pch-scrypt`](https://github.com/simonepri/phc-scrypt), scrypt-mcf generates scrypt “hashes” in the following format:
 
 ```mcf
 $scrypt$ln=<cost>,r=<blocksize>,p=<parallelism>$<salt in base64 no padding>$<hash in base64 no padding>
