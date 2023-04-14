@@ -16,7 +16,7 @@
 
 #### Defined in
 
-[index.ts:10](https://github.com/juanelas/scrypt-mcf/blob/8318a26/src/ts/index.ts#L10)
+[index.ts:10](https://github.com/juanelas/scrypt-mcf/blob/a7537da/src/ts/index.ts#L10)
 
 ___
 
@@ -26,7 +26,7 @@ ___
 
 #### Defined in
 
-[index.ts:12](https://github.com/juanelas/scrypt-mcf/blob/8318a26/src/ts/index.ts#L12)
+[index.ts:12](https://github.com/juanelas/scrypt-mcf/blob/a7537da/src/ts/index.ts#L12)
 
 ___
 
@@ -36,4 +36,4 @@ ___
 
 #### Defined in
 
-[index.ts:11](https://github.com/juanelas/scrypt-mcf/blob/8318a26/src/ts/index.ts#L11)
+[index.ts:11](https://github.com/juanelas/scrypt-mcf/blob/a7537da/src/ts/index.ts#L11)

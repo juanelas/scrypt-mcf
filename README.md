@@ -34,7 +34,7 @@ import * as scryptMcf from 'scrypt-mcf'
 
 The appropriate version for browser or node is automatically exported.
 
-You can also download the [IIFE bundle](https://raw.githubusercontent.com/juanelas/scrypt-mcf/main/dist/bundles/iife.js), the [ESM bundle](https://raw.githubusercontent.com/juanelas/scrypt-mcf/main/dist/bundles/esm.min.js) or the [UMD bundle](https://raw.githubusercontent.com/juanelas/scrypt-mcf/main/dist/bundles/umd.js) and manually add it to your project, or, if you have already installed `scrypt-mcf` in your project, just get the bundles from `node_modules/scrypt-mcf/dist/bundles/`.
+You can also download the [IIFE bundle](https://raw.githubusercontent.com/juanelas/scrypt-mcf/main/dist/bundle.iife.js), the [ESM bundle](https://raw.githubusercontent.com/juanelas/scrypt-mcf/main/dist/bundle.esm.min.js) or the [UMD bundle](https://raw.githubusercontent.com/juanelas/scrypt-mcf/main/dist/bundle.umd.js) and manually add it to your project, or, if you have already installed `scrypt-mcf` in your project, just get the bundles from `node_modules/scrypt-mcf/dist/bundles/`.
 
 An example of usage could be:
 
