@@ -18,7 +18,7 @@ jobs:
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: '22.5.1' # 22.5.1 is a temporary fix since 22 now points to 22.5.0 that has a bug that breaks installation
+          node-version: '22'
           registry-url: 'https://registry.npmjs.org'
 
       - name: install
