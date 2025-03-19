@@ -39,40 +39,46 @@ function camelise (str) {
 }
 
 async function typedoc () {
-  const app = new TypeDoc.Application()
-
   // prepare tsconfig
   const tsConfigPath = path.join(rootDir, 'tsconfig.json')
   const tempTsConfigPath = path.join(rootDir, '.tsconfig.json')
 
   const tsConfig = json5.parse(fs.readFileSync(tsConfigPath, 'utf8'))
   tsConfig.include = ['src/ts/**/*', 'build/typings/**/*.d.ts']
-  tsConfig.exclude = ['src/**/*.spec.ts']
+  tsConfig.exclude = ['src/**/*.spec.ts', 'src/**/*.test.ts']
   fs.writeFileSync(tempTsConfigPath, JSON.stringify(tsConfig, undefined, 2))
 
+  const app = await TypeDoc.Application.bootstrapWithPlugins({
+    // typedoc options here
+    tsconfig: tempTsConfigPath,
+    entryPoints: ['src/ts/index.ts'],
+    entryFileName: 'API',
+    disableSources: true,
+    plugin: ['typedoc-plugin-markdown'],
+    includeVersion: true,
+    readme: 'none',
+    hideBreadcrumbs: true,
+    hidePageHeader: true,
+    excludePrivate: true,
+    outputFileStrategy: 'modules',
+    indexFormat: 'table',
+    parametersFormat: 'table',
+    interfacePropertiesFormat: 'table',
+    classPropertiesFormat: 'table',
+    enumMembersFormat: 'table',
+    typeDeclarationFormat: 'table',
+    propertyMembersFormat: 'table',
+    router: 'module'
+  })
   // If you want TypeDoc to load tsconfig.json / typedoc.json files
   app.options.addReader(new TypeDoc.TSConfigReader())
   // app.options.addReader(new TypeDoc.TypeDocReader())
 
-  app.bootstrap({
-    // typedoc options here
-    tsconfig: tempTsConfigPath,
-    entryPoints: ['src/ts/index.ts'],
-    plugin: ['typedoc-plugin-markdown'],
-    includeVersion: true,
-    entryDocument: 'API.md',
-    readme: 'none',
-    hideBreadcrumbs: true,
-    excludePrivate: true
-  })
+  const project = await app.convert()
 
-  const project = app.convert()
-
-  if (project) {
-    // Project may not have converted correctly
+  if (project) { // Project may not have converted correctly
     const output = path.join(rootDir, './docs')
-
-    // Rendered docs
+    // Render docs
     await app.generateDocs(project, output)
   }
 
@@ -92,7 +98,7 @@ function getRepositoryData () {
       }
     }
   } else if (typeof pkgJson.repository === 'object' && pkgJson.repository.type === 'git' && pkgJson.repository.url !== 'undefined') {
-    const regex = /(?:.+?\+)?http[s]?:\/\/(?<repoProvider>[\w._-]+)\.\w{2,3}\/(?<repoUsername>[\w._-]+)\/(?<repoName>[\w._\-/]+?)\.git/
+    const regex = /(?:.+?\+)?http[s]?:\/\/(?<repoProvider>[\w._-]+)\.\w\w+\/(?<repoUsername>[\w._-]+)\/(?<repoName>[\w._\-/]+?)\.git/
     const match = pkgJson.repository.url.match(regex)
     ret = {
       repoProvider: match[1],
@@ -112,15 +118,11 @@ function getRepositoryData () {
 }
 
 function variableReplacements () {
-  const { repoProvider, repoUsername, repoName, repoDirectory, branch } = getRepositoryData() || {}
+  const { repoProvider, repoUsername, repoName } = getRepositoryData() || {}
 
   const regex = /^(?:(?<scope>@.*?)\/)?(?<name>.*)/ // We are going to take only the package name part if there is a scope, e.g. @my-org/package-name
   const { name } = pkgJson.name.match(regex).groups
   const camelCaseName = camelise(name)
-
-  const iifeBundlePath = pkgJson.exports['./iife-browser-bundle'] !== undefined ? path.relative('.', pkgJson.exports['./iife-browser-bundle']) : undefined
-  const esmBundlePath = pkgJson.exports['./esm-browser-bundle'] !== undefined ? path.relative('.', pkgJson.exports['./esm-browser-bundle']) : undefined
-  const umdBundlePath = pkgJson.exports['./umd-browser-bundle'] !== undefined ? path.relative('.', pkgJson.exports['./umd-browser-bundle']) : undefined
 
   let useWorkflowBadge = false
   let useCoverallsBadge = false
@@ -133,22 +135,15 @@ function variableReplacements () {
     }
   }
 
-  let iifeBundle, esmBundle, umdBundle, workflowBadge, coverallsBadge
+  let workflowBadge, coverallsBadge
+  let browserBundlesInstallation = 'You can also build the project with `npm run build` and get the ESM, IIFE and/or UMD module files fomr `' + pkgJson.directories.bundles + '`.'
 
   if (repoProvider) {
     switch (repoProvider) {
       case 'github':
-        iifeBundle = iifeBundlePath !== undefined ? `[IIFE bundle](https://raw.githubusercontent.com/${repoUsername}/${repoName}/${branch}/${repoDirectory !== undefined ? repoDirectory + '/' : ''}${iifeBundlePath})` : undefined
-        esmBundle = esmBundlePath !== undefined ? `[ESM bundle](https://raw.githubusercontent.com/${repoUsername}/${repoName}/${branch}/${repoDirectory !== undefined ? repoDirectory + '/' : ''}${esmBundlePath})` : undefined
-        umdBundle = umdBundlePath !== undefined ? `[UMD bundle](https://raw.githubusercontent.com/${repoUsername}/${repoName}/${branch}/${repoDirectory !== undefined ? repoDirectory + '/' : ''}${umdBundlePath})` : undefined
-        workflowBadge = useWorkflowBadge ? `[![Node.js CI](https://github.com/${repoUsername}/${repoName}/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/${repoUsername}/${repoName}/actions/workflows/build-and-test.yml)` : undefined
-        coverallsBadge = useCoverallsBadge ? `[![Coverage Status](https://coveralls.io/repos/github/${repoUsername}/${repoName}/badge.svg?branch=${branch})](https://coveralls.io/github/${repoUsername}/${repoName}?branch=${branch})` : undefined
-        break
-
-      case 'gitlab':
-        iifeBundle = iifeBundlePath !== undefined ? `[IIFE bundle](https://gitlab.com/${repoUsername}/${repoName}/-/raw/${branch}/${repoDirectory !== undefined ? repoDirectory + '/' : ''}${iifeBundlePath}?inline=false)` : undefined
-        esmBundle = esmBundlePath !== undefined ? `[ESM bundle](https://gitlab.com/${repoUsername}/${repoName}/-/raw/${branch}/${repoDirectory !== undefined ? repoDirectory + '/' : ''}${esmBundlePath}?inline=false)` : undefined
-        umdBundle = umdBundlePath !== undefined ? `[UMD bundle](https://gitlab.com/${repoUsername}/${repoName}/-/raw/${branch}/${repoDirectory !== undefined ? repoDirectory + '/' : ''}${umdBundlePath}?inline=false)` : undefined
+        browserBundlesInstallation = `You can also download browser ESM, IIFE and UMD bundles directly from the [releases' page](https://github.com/${repoUsername}/${repoName}/releases) and manually add them to your project.`
+        workflowBadge = useWorkflowBadge ? `[![Build and test](https://github.com/${repoUsername}/${repoName}/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/${repoUsername}/${repoName}/actions/workflows/build-and-test.yml)` : undefined
+        coverallsBadge = useCoverallsBadge ? `[![Coverage Status](https://coveralls.io/repos/github/${repoUsername}/${repoName}/badge.svg?branch=refs/tags/v0.1.5)](https://coveralls.io/github/${repoUsername}/${repoName}?branch=refs/tags/v${pkgJson.version})` : undefined
         break
 
       default:
@@ -158,17 +153,16 @@ function variableReplacements () {
 
   template = template
     .replace(/\{\{PKG_NAME\}\}/g, pkgJson.name)
+    .replace(/\{\{PKG_NAME_NO_SCOPE\}\}/g, name)
     .replace(/\{\{PKG_LICENSE\}\}/g, pkgJson.license.replace('-', '_'))
     .replace(/\{\{PKG_DESCRIPTION\}\}/g, pkgJson.description)
     .replace(/\{\{PKG_CAMELCASE\}\}/g, camelCaseName)
-    .replace(/\{\{IIFE_BUNDLE\}\}/g, iifeBundle || 'IIFE bundle')
-    .replace(/\{\{ESM_BUNDLE\}\}/g, esmBundle || 'ESM bundle')
-    .replace(/\{\{UMD_BUNDLE\}\}/g, umdBundle || 'UMD bundle')
+    .replace(/\{\{BROWSER_BUNDLES_INSTALLATION\}\}/g, browserBundlesInstallation)
 
   if (repoProvider && repoProvider === 'github') {
-    template = template.replace(/\{\{GITHUB_ACTIONS_BADGES\}\}\n/gs, (workflowBadge ? `${workflowBadge}\n` : '') + (coverallsBadge ? `${coverallsBadge}\n` : ''))
+    template = template.replace(/\{\{BADGES\}\}\n/gs, (workflowBadge ? `${workflowBadge}\n` : '') + (coverallsBadge ? `${coverallsBadge}\n` : ''))
   } else {
-    template = template.replace(/\{\{GITHUB_ACTIONS_BADGES\}\}\n/gs, '')
+    template = template.replace(/\{\{BADGES\}\}\n/gs, '')
   }
 }
 

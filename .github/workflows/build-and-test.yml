@@ -1,4 +1,4 @@
-name: build, test (node and browser), coverage, publish to NPM
+name: build n test
 
 on:
   push:
@@ -7,18 +7,26 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    name: build
-    runs-on: ubuntu-latest
+  buildntest:
+    name: build and test in Node.js and browser
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: ['18', '20', '22']
+      # When set to true, GitHub cancels all in-progress jobs if any matrix job fails.
+      fail-fast: false
+      # The maximum number of jobs that can run simultaneously. Set to 1 if you can't run tests in parallel
+      # max-parallel: 1
     steps:
       - name: Git checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Use Node.js 22
-        uses: actions/setup-node@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
         with:
-          node-version: 22.x
-          registry-url: "https://registry.npmjs.org"
+          node-version: ${{ matrix.node-version }}
+          registry-url: 'https://registry.npmjs.org'
 
       - name: install
         run: npm ci
@@ -26,30 +34,12 @@ jobs:
       - name: build
         run: npm run build
 
-  nodetests:
-    name: tests in Node.js
-    needs: [build]
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        node-version: [20.x, 22.x]
-      # When set to true, GitHub cancels all in-progress jobs if any matrix job fails.
-      fail-fast: false
-      # The maximum number of jobs that can run simultaneously. Set to 1 if you can't run tests in parallel
-      # max-parallel: 1
-    steps:
-      - name: Git checkout
-        uses: actions/checkout@v3
-
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node-version }}
-          registry-url: "https://registry.npmjs.org"
-
-      - name: install
-        run: npm i
+      - if: matrix.os == 'ubuntu-latest' && matrix.node-version == '22'
+        name: browser tests
+        run: npm run test:browser-headless
+        # env:
+        #   VARIABLE1: ${{ secrets.VARIABLE1 }}
+        #   VARIABLE2: ${{ secrets.VARIABLE2 }}
 
       - name: node esm tests
         run: npm run test:node-esm
@@ -62,55 +52,3 @@ jobs:
         # env:
         #   VARIABLE1: ${{ secrets.VARIABLE1 }}
         #   VARIABLE2: ${{ secrets.VARIABLE2 }}
-
-  browsertests:
-    needs: [build]
-    name: tests in browser
-    runs-on: ubuntu-latest
-    steps:
-      - name: Git checkout
-        uses: actions/checkout@v3
-
-      - name: Use Node.js 22
-        uses: actions/setup-node@v3
-        with:
-          node-version: 22.x
-          registry-url: "https://registry.npmjs.org"
-
-      - name: install
-        run: npm ci
-
-      - name: browser tests
-        run: npm run test:browser-headless
-        # env:
-        #   VARIABLE1: ${{ secrets.VARIABLE1 }}
-        #   VARIABLE2: ${{ secrets.VARIABLE2 }}
-
-  publish:
-    needs: [nodetests, browsertests]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Git checkout
-        uses: actions/checkout@v3
-
-      - name: Install Node.js, NPM and Yarn
-        uses: actions/setup-node@v3
-        with:
-          node-version: "22.x"
-          registry-url: "https://registry.npmjs.org"
-
-      - name: install
-        run: npm ci
-        
-      - name: coverage
-        run: npm run coverage
-
-      - name: send report to coveralls.io
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: NPM publish
-        run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

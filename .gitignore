@@ -16,9 +16,12 @@ coverage
 *.env
 
 # Test temporal files
-.mocha-ts
+.nbs
 .tsconfig.json
 .types
 
 # docs temporal files
 .nojekyll
+
+# built files
+dist

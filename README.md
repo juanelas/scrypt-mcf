@@ -1,8 +1,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
-[![Node.js CI](https://github.com/juanelas/scrypt-mcf/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/juanelas/scrypt-mcf/actions/workflows/build-and-test.yml)
-[![Coverage Status](https://coveralls.io/repos/github/juanelas/scrypt-mcf/badge.svg?branch=main)](https://coveralls.io/github/juanelas/scrypt-mcf?branch=main)
+{{GITHUB_ACTIONS_BADGES}}
 
 # scrypt-mcf
 
@@ -34,7 +33,7 @@ import * as scryptMcf from 'scrypt-mcf'
 
 The appropriate version for browser or node is automatically exported.
 
-You can also download the [IIFE bundle](https://raw.githubusercontent.com/juanelas/scrypt-mcf/main/dist/bundle.iife.js), the [ESM bundle](https://raw.githubusercontent.com/juanelas/scrypt-mcf/main/dist/bundle.esm.min.js) or the [UMD bundle](https://raw.githubusercontent.com/juanelas/scrypt-mcf/main/dist/bundle.umd.js) and manually add it to your project, or, if you have already installed `scrypt-mcf` in your project, just get the bundles from `node_modules/scrypt-mcf/dist/bundles/`.
+You can also download the {{IIFE_BUNDLE}}, the {{ESM_BUNDLE}} or the {{UMD_BUNDLE}} and manually add it to your project, or, if you have already installed `scrypt-mcf` in your project, just get the bundles from `node_modules/scrypt-mcf/dist/bundles/`.
 
 An example of usage could be:
 

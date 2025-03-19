@@ -11,9 +11,9 @@ import { existsSync, readFileSync } from 'fs'
 import { builtinModules } from 'module'
 import { join } from 'path'
 import dts from 'rollup-plugin-dts'
-import { compile } from './rollup-plugin-dts.js'
-
 import * as url from 'url'
+import { compileDts } from './my-rollup-plugin-dts.mjs'
+
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 
 const rootDir = join(__dirname, '..')
@@ -45,22 +45,8 @@ if (existsSync(input) !== true) throw new Error('The entry point should be index
 const tsPluginOptions = {
   tsconfig: tsConfigPath,
   outDir: undefined,
-  include: ['src/ts/**/*', 'build/typings/is-browser.d.ts'],
-  exclude: ['src/**/*.spec.ts']
-}
-
-const sourcemapOutputOptions = {
-  sourcemap: 'inline',
-  sourcemapExcludeSources: true
-}
-
-function compileDts (outDir) {
-  return {
-    name: 'compile-dts',
-    closeBundle () {
-      compile(outDir)
-    }
-  }
+  include: ['src/ts/**/*', 'build/typings/**/*.d.ts'],
+  exclude: ['src/**/*.spec.ts', 'src/**/*.test.ts']
 }
 
 function resolveOnly (module) { // if a dev dependency is imported we will resolve it so that the dist modules always work
@@ -82,16 +68,14 @@ function resolveOnly (module) { // if a dev dependency is imported we will resol
   return false
 }
 
-const tmpDeclarationsDir = join(rootDir, '.types')
-
 export default [
   { // Browser ESM
     input,
     output: [
       {
         file: join(rootDir, pkgJson.exports['.'].default.default),
-        ...sourcemapOutputOptions,
         format: 'es',
+        sourcemap: true,
         plugins: [
           terser()
         ]
@@ -100,11 +84,13 @@ export default [
     plugins: [
       replace({
         IS_BROWSER: true,
+        environment: 'browser',
         _MODULE_TYPE: "'ESM'",
+        _NPM_PKG_VERSION: `'${process.env.npm_package_version}'` ?? "'0.0.1'",
         preventAssignment: true
       }),
       rollupPluginTs(tsPluginOptions),
-      commonjs({ extensions: ['.js', '.cjs', '.jsx', '.cjsx'] }),
+      commonjs({ extensions: ['.js', '.jsx'] }),
       json(),
       resolve({
         browser: true,
@@ -118,22 +104,22 @@ export default [
     input,
     output: [
       {
-        file: join(rootDir, pkgJson.exports['./esm-browser-bundle-nomin']),
+        file: join(rootDir, pkgJson.directories.bundles, `${name}.esm.js`),
         format: 'es'
       },
       {
-        file: join(rootDir, pkgJson.exports['./esm-browser-bundle']),
+        file: join(rootDir, pkgJson.directories.bundles, `${name}.esm.min.js`),
         format: 'es',
         plugins: [terser()]
       },
       {
-        file: join(rootDir, pkgJson.exports['./iife-browser-bundle']),
+        file: join(rootDir, pkgJson.directories.bundles, `${name}.iife.js`),
         format: 'iife',
         name: pkgCamelisedName,
         plugins: [terser()]
       },
       {
-        file: join(rootDir, pkgJson.exports['./umd-browser-bundle']),
+        file: join(rootDir, pkgJson.directories.bundles, `${name}.umd.js`),
         format: 'umd',
         name: pkgCamelisedName,
         plugins: [terser()]
@@ -142,16 +128,52 @@ export default [
     plugins: [
       replace({
         IS_BROWSER: true,
+        environment: 'browser',
         _MODULE_TYPE: "'BUNDLE'",
+        _NPM_PKG_VERSION: `'${process.env.npm_package_version}'` ?? "'0.0.1'",
         preventAssignment: true
       }),
       rollupPluginTs({
-        ...tsPluginOptions,
-        sourceMap: false
+        ...tsPluginOptions
       }),
-      commonjs({ extensions: ['.js', '.cjs', '.jsx', '.cjsx'] }),
+      commonjs({ extensions: ['.js', '.jsx'] }),
       json(),
       resolve({ browser: true })
+    ]
+  },
+  { // Node ESM
+    input,
+    output: [
+      {
+        file: join(rootDir, pkgJson.exports['.'].node.import.default),
+        format: 'es',
+        sourcemap: true,
+        plugins: [
+          terser()
+        ]
+      }
+    ],
+    plugins: [
+      replace({
+        IS_BROWSER: false,
+        environment: 'nodejs',
+        _MODULE_TYPE: "'ESM'",
+        _NPM_PKG_VERSION: `'${process.env.npm_package_version}'` ?? "'0.0.1'",
+        __filename: 'fileURLToPath(import.meta.url)',
+        __dirname: 'fileURLToPath(new URL(\'.\', import.meta.url))',
+        preventAssignment: true
+      }),
+      rollupPluginTs(tsPluginOptions),
+      inject({
+        crypto: ['crypto', 'webcrypto'],
+        fileURLToPath: ['url', 'fileURLToPath']
+      }),
+      commonjs({ extensions: ['.js', '.jsx'] }),
+      json(),
+      resolve({
+        exportConditions: ['node'],
+        resolveOnly
+      })
     ]
   },
   { // Node CJS
@@ -159,30 +181,34 @@ export default [
     output: [
       {
         file: join(rootDir, pkgJson.exports['.'].node.require.default),
-        ...sourcemapOutputOptions,
         format: 'cjs',
         exports: 'auto',
+        interop: 'auto',
+        dynamicImportInCjs: false,
+        sourcemap: true,
         plugins: [
           terser()
         ]
       }
     ],
     plugins: [
-      replace({
-        'await import(': 'require(',
-        delimiters: ['', ''],
-        preventAssignment: true
-      }),
+      // replace({
+      //   'await import(': 'require(',
+      //   delimiters: ['', ''],
+      //   preventAssignment: true
+      // }),
       replace({
         IS_BROWSER: false,
+        environment: 'nodejs',
         _MODULE_TYPE: "'CJS'",
+        _NPM_PKG_VERSION: `'${process.env.npm_package_version}'` ?? "'0.0.1'",
         preventAssignment: true
       }),
       rollupPluginTs(tsPluginOptions),
       inject({
         crypto: ['crypto', 'webcrypto']
       }),
-      commonjs({ extensions: ['.js', '.cjs', '.jsx', '.cjsx'] }),
+      commonjs({ extensions: ['.js', '.jsx'] }),
       json(),
       resolve({
         exportConditions: ['node'],
@@ -190,44 +216,11 @@ export default [
       })
     ]
   },
-  { // Node ESM and type declarations
+  { // a bundle of declarations to index.d.ts
     input,
-    output: [
-      {
-        file: join(rootDir, pkgJson.exports['.'].node.import.default),
-        ...sourcemapOutputOptions,
-        format: 'es',
-        plugins: [
-          terser()
-        ]
-      }
-    ],
+    output: [{ file: join(rootDir, pkgJson.types), format: 'es' }],
     plugins: [
-      replace({
-        IS_BROWSER: false,
-        _MODULE_TYPE: "'ESM'",
-        __filename: 'fileURLToPath(import.meta.url)',
-        __dirname: 'fileURLToPath(new URL(\'.\', import.meta.url))',
-        preventAssignment: true
-      }),
-      rollupPluginTs(tsPluginOptions),
-      compileDts(tmpDeclarationsDir),
-      inject({
-        crypto: ['crypto', 'webcrypto'],
-        fileURLToPath: ['url', 'fileURLToPath']
-      }),
-      commonjs({ extensions: ['.js', '.cjs', '.jsx', '.cjsx'] }),
-      json(),
-      resolve({
-        exportConditions: ['node'],
-        resolveOnly
-      })
-    ]
-  },
-  {
-    input: join(tmpDeclarationsDir, 'index.d.ts'),
-    output: [{ file: 'dist/index.d.ts', format: 'es' }],
-    plugins: [
+      compileDts(),
       dts({
         respectExternal: true
       })
