@@ -46,9 +46,9 @@ async function main () {
   passwordMatch = await verify('OtherPassword', mcfString) // false
 
   // You can also use non-default options
-  const mcfString2 = await hash('MyPassword', { derivedKeyLength: 64, scryptParams: { logN: 18, r: 8, p: 2 } }) // $scrypt$ln=18,r=8,p=2$9lRqxeVS/at1bktaJ5q64A$pFmlWRrddcMHScP1Yceyo6UKc8eKEJDv+/aWSRlArg3b4Hu+xEFE88P+0HHilbBViRAAhtNWETTosUtxEJl95g
-  passwordMatch = await verify('MyPassword', mcfString) // true
-  passwordMatch = await verify('OtherPassword', mcfString) // false
+  const mcfString2 = await hash('MySuperPassword', { derivedKeyLength: 64, scryptParams: { logN: 18, r: 8, p: 2 } }) // $scrypt$ln=18,r=8,p=2$9lRqxeVS/at1bktaJ5q64A$pFmlWRrddcMHScP1Yceyo6UKc8eKEJDv+/aWSRlArg3b4Hu+xEFE88P+0HHilbBViRAAhtNWETTosUtxEJl95g
+  passwordMatch = await verify('MyPassword', mcfString2) // false
+  passwordMatch = await verify('MySuperPassword', mcfString2) // true
 }
 
 main()
